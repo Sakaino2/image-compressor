@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,9 +14,9 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/Sakaino2/image-compressor/controllers"
 	"github.com/chai2010/webp"
 	"github.com/sqweek/dialog"
-	"golang.org/x/image/bmp"
 )
 
 type FileItem struct {
@@ -474,19 +471,7 @@ func convertImage(inputPath, outputPath string, quality float32) error {
 	defer file.Close()
 
 	// Decode image
-	var img image.Image
-	ext := strings.ToLower(filepath.Ext(inputPath))
-
-	switch ext {
-	case ".jpg", ".jpeg":
-		img, err = jpeg.Decode(file)
-	case ".png":
-		img, err = png.Decode(file)
-	case ".bmp":
-		img, err = bmp.Decode(file)
-	default:
-		img, _, err = image.Decode(file)
-	}
+	img, err := controllers.DecodeImage(file, inputPath)
 
 	if err != nil {
 		return fmt.Errorf("decoding image: %w", err)
@@ -500,7 +485,7 @@ func convertImage(inputPath, outputPath string, quality float32) error {
 	defer outFile.Close()
 
 	// Encode as WebP
-	err = webp.Encode(outFile, img, &webp.Options{Quality: quality})
+	err = webp.Encode(outFile, *img, &webp.Options{Quality: quality})
 	if err != nil {
 		return fmt.Errorf("encoding webp: %w", err)
 	}
